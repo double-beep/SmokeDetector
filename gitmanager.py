@@ -344,8 +344,8 @@ class GitManager:
             blacklist_file_name = blacklist_type[0]
             print(blacklist_file_name)
             print(blacklister)
-            print(string)
-            exists, line = blacklister.exists(string)
+            print(string1)
+            exists, line = blacklister.exists(string1)
             print(exists)
             if exists:
                 raise CmdException('Already {}ed on line {} of {}'.format(op, line, file))
