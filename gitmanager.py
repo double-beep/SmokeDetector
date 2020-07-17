@@ -315,11 +315,47 @@ class GitManager:
             raise ValueError("PR description is malformed. Blame a developer.")
         if pr_info["state"] != "open":
             raise ValueError("PR #{} is not currently open, so I won't merge it.".format(pr_id))
+        string = pr_info["title"]
+        file = pr_info["filename"]
         ref = pr_info['head']['ref']
-
+        string = regex.match(r".*?: \S+ (.*?)(?:\Z|\s*\(\?#)", str).group(1)
+        string = string.replace("\\", "")
+        if file == "blacklisted_websites.txt":
+            blacklist_type = Blacklist.WEBSITES
+            ms_search_option = "&body_is_regex=1&body="
+        elif file == "bad_keywords.txt":
+            blacklist_type = Blacklist.WEBSITES
+            ms_search_option = "&body_is_regex=1&body="
+        elif file == "blacklisted_usernames.txt":
+            blacklist_type = Blacklist.USERNAMES
+            ms_search_option = "&username_is_regex=1&username="
+        elif file == "blacklisted_numbers.txt":
+            blacklist_type = Blacklist.NUMBERS
+            ms_search_option = "&body="
+        elif file == "watched_keywords.txt":
+            blacklist_type = Blacklist.WATCHED_KEYWORDS
+            ms_search_option = "&body_is_regex=1&body="
+        elif file == "watched_numbers.txt":
+            blacklist_type = Blacklist.WATCHED_NUMBERS
+            ms_search_option = "&body="
+        else:
+            raise CmdException('GitManager: blacklist is not recognized. Blame a developer.')
+        now = str(int(time.time()))
+        blacklister = Blacklist(blacklist_type)
+        blacklist_file_name = blacklist_type[0]
+        username = ''
+        if blacklist_type in {Blacklist.WATCHED_KEYWORDS, Blacklist.WATCHED_NUMBERS}:
+            op = 'watch'
+            item = string
+            item_to_blacklist = "\t".join([now, username, item])
+        else:
+            op = 'blacklist'
+            item = string
+        exists, line = blacklister.exists(item_to_blacklist)
+        if exists:
+            raise CmdException('Already {}ed on line {} of {}'.format(op, line, file))
         if comment:  # yay we have comments now
             GitHubManager.comment_on_thread(pr_id, comment)
-
         try:
             # Remote checks passed, good to go here
             cls.gitmanager_lock.acquire()
