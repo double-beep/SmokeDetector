@@ -327,44 +327,30 @@ class GitManager:
         username = regex.match(r".*(?=:)", string).group(0)
         if file == "blacklisted_websites.txt":
             blacklist_type = Blacklist.WEBSITES
-            ms_search_option = "&body_is_regex=1&body="
         elif file == "bad_keywords.txt":
             blacklist_type = Blacklist.WEBSITES
-            ms_search_option = "&body_is_regex=1&body="
         elif file == "blacklisted_usernames.txt":
             blacklist_type = Blacklist.USERNAMES
-            ms_search_option = "&username_is_regex=1&username="
         elif file == "blacklisted_numbers.txt":
             blacklist_type = Blacklist.NUMBERS
-            ms_search_option = "&body="
         elif file == "watched_keywords.txt":
             blacklist_type = Blacklist.WATCHED_KEYWORDS
-            ms_search_option = "&body_is_regex=1&body="
         elif file == "watched_numbers.txt":
             blacklist_type = Blacklist.WATCHED_NUMBERS
-            ms_search_option = "&body="
         else:
             raise CmdException('GitManager: blacklist is not recognized. Blame a developer.')
         try:
-            now = str(int(time.time()))
             blacklister = Blacklist(blacklist_type)
             blacklist_file_name = blacklist_type[0]
             print(blacklist_file_name)
             print(blacklister)
-            exists, line = blacklister.exists(item_to_blacklist)
-            if blacklist_type in {Blacklist.WATCHED_KEYWORDS, Blacklist.WATCHED_NUMBERS}:
-                op = 'watch'
-                item = string
-                item_to_blacklist = "\t".join([now, username, item])
-            else:
-                op = 'blacklist'
-                item = string
-            print(item_to_blacklist)
+            print(string)
+            exists, line = blacklister.exists(string)
             print(exists)
             if exists:
                 raise CmdException('Already {}ed on line {} of {}'.format(op, line, file))
         except Exception:
-            print(traceback.format_exc())
+            print(sys.format_exc())
         if comment:  # yay we have comments now
             GitHubManager.comment_on_thread(pr_id, comment)
         try:
