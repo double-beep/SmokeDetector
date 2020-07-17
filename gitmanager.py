@@ -357,7 +357,9 @@ class GitManager:
             else:
                 op = 'blacklist'
                 item = string
+            print(item_to_blacklist)
             exists, line = blacklister.exists(item_to_blacklist)
+            print(exists)
             if exists:
                 raise CmdException('Already {}ed on line {} of {}'.format(op, line, file))
         except Exception:
