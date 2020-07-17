@@ -21978,3 +21978,4 @@
 1594886841	Daniil	Askmeoffers(?!\.com)
 1594889771	Daniil	chronodivers\.com
 1594981596	Daniil	test\.com
+1594981719	Daniil	test1\.com
