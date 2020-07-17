@@ -322,9 +322,9 @@ class GitManager:
         file = files_info[0]["filename"]
         print(file)
         ref = pr_info['head']['ref']
-        string = regex.match(r".*?: \S+ (.*?)(?:\Z|\s*\(\?#)", string).group(1)
+        string1 = regex.match(r".*?: \S+ (.*?)(?:\Z|\s*\(\?#)", string).group(1)
         string = string.replace("\\", "")
-        print(string)
+        username = regex.match(r".*(?=:)", string).group(1)
         if file == "blacklisted_websites.txt":
             blacklist_type = Blacklist.WEBSITES
             ms_search_option = "&body_is_regex=1&body="
@@ -349,7 +349,8 @@ class GitManager:
             now = str(int(time.time()))
             blacklister = Blacklist(blacklist_type)
             blacklist_file_name = blacklist_type[0]
-            username = ''
+            print(blacklist_file_name)
+            print(blacklister)
             if blacklist_type in {Blacklist.WATCHED_KEYWORDS, Blacklist.WATCHED_NUMBERS}:
                 op = 'watch'
                 item = string
