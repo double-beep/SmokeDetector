@@ -351,6 +351,7 @@ class GitManager:
             blacklist_file_name = blacklist_type[0]
             print(blacklist_file_name)
             print(blacklister)
+            exists, line = blacklister.exists(item_to_blacklist)
             if blacklist_type in {Blacklist.WATCHED_KEYWORDS, Blacklist.WATCHED_NUMBERS}:
                 op = 'watch'
                 item = string
@@ -359,7 +360,6 @@ class GitManager:
                 op = 'blacklist'
                 item = string
             print(item_to_blacklist)
-            exists, line = blacklister.exists(item_to_blacklist)
             print(exists)
             if exists:
                 raise CmdException('Already {}ed on line {} of {}'.format(op, line, file))
