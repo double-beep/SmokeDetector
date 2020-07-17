@@ -11,6 +11,7 @@ import regex
 import requests
 from requests.auth import HTTPBasicAuth
 
+import traceback
 from urllib.parse import quote_plus
 from urllib.parse import quote
 from globalvars import GlobalVars
@@ -306,20 +307,24 @@ class GitManager:
     @classmethod
     def merge_pull_request(cls, pr_id, comment=""):
         response = requests.get("https://api.github.com/repos/{}/pulls/{}".format(GlobalVars.bot_repo_slug, pr_id))
-        if not response:
+        files = requests.get("https://api.github.com/repos/{}/pulls/{}/files".format(GlobalVars.bot_repo_slug, pr_id))
+        if not response or not files:
             raise ConnectionError("Cannot connect to GitHub API")
         pr_info = response.json()
-        if pr_info["user"]["login"] != "SmokeDetector":
+        files_info = files.json()
+        if pr_info["user"]["login"] != "Daniil-SD":
             raise ValueError("PR #{} is not created by me, so I can't approve it.".format(pr_id))
         if "<!-- METASMOKE-BLACKLIST" not in pr_info["body"]:
             raise ValueError("PR description is malformed. Blame a developer.")
         if pr_info["state"] != "open":
             raise ValueError("PR #{} is not currently open, so I won't merge it.".format(pr_id))
         string = pr_info["title"]
-        file = pr_info["filename"]
+        file = files_info[0]["filename"]
+        print(file)
         ref = pr_info['head']['ref']
-        string = regex.match(r".*?: \S+ (.*?)(?:\Z|\s*\(\?#)", str).group(1)
+        string = regex.match(r".*?: \S+ (.*?)(?:\Z|\s*\(\?#)", string).group(1)
         string = string.replace("\\", "")
+        print(string)
         if file == "blacklisted_websites.txt":
             blacklist_type = Blacklist.WEBSITES
             ms_search_option = "&body_is_regex=1&body="
@@ -340,20 +345,23 @@ class GitManager:
             ms_search_option = "&body="
         else:
             raise CmdException('GitManager: blacklist is not recognized. Blame a developer.')
-        now = str(int(time.time()))
-        blacklister = Blacklist(blacklist_type)
-        blacklist_file_name = blacklist_type[0]
-        username = ''
-        if blacklist_type in {Blacklist.WATCHED_KEYWORDS, Blacklist.WATCHED_NUMBERS}:
-            op = 'watch'
-            item = string
-            item_to_blacklist = "\t".join([now, username, item])
-        else:
-            op = 'blacklist'
-            item = string
-        exists, line = blacklister.exists(item_to_blacklist)
-        if exists:
-            raise CmdException('Already {}ed on line {} of {}'.format(op, line, file))
+        try:
+            now = str(int(time.time()))
+            blacklister = Blacklist(blacklist_type)
+            blacklist_file_name = blacklist_type[0]
+            username = ''
+            if blacklist_type in {Blacklist.WATCHED_KEYWORDS, Blacklist.WATCHED_NUMBERS}:
+                op = 'watch'
+                item = string
+                item_to_blacklist = "\t".join([now, username, item])
+            else:
+                op = 'blacklist'
+                item = string
+            exists, line = blacklister.exists(item_to_blacklist)
+            if exists:
+                raise CmdException('Already {}ed on line {} of {}'.format(op, line, file))
+        except Exception:
+            print(traceback.format_exc())
         if comment:  # yay we have comments now
             GitHubManager.comment_on_thread(pr_id, comment)
         try:
