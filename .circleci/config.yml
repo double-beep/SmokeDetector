@@ -1,39 +1,21 @@
-version: 2
+version: 2.1
+
+orbs:
+  python: circleci/python@0.2.1
+
 jobs:
-  build:
-    docker:
-      - image: circleci/python:3.8-buster
-    branches:
-      ignore: deploy
+  build-and-test:
+    executor: python/default
     steps:
       - checkout
-      - restore_cache:
-          key: deps-{{ .Branch }}-{{ checksum "requirements.txt" }}
+      - python/load-cache
+      - python/install-deps
+      - python/save-cache
       - run:
-          name: install python dependencies in venv
-          command: |
-            ssh-keyscan github.com >> ~/.ssh/known_hosts
-            python3 -m venv env
-            env/bin/pip3 install -r requirements.txt --upgrade
-            env/bin/pip3 install -r user_requirements.txt --upgrade
-      - save_cache:
-          key: deps-{{ .Branch }}-{{ checksum "requirements.txt" }}
-          paths:
-            - "env"
-      - run:
-          name: Lint tests
-          command: env/bin/python3 -m flake8 --config=tox_tests.ini ./test/
-      - run:
-          name: Lint classes
-          command: env/bin/python3 -m flake8 --config=tox_classes.ini ./classes/
-      - run:
-          name: Lint code
-          command: env/bin/python3 -m flake8 ./
-      - run:
-          name: Prepare Git for test
-          command: |
-            git config user.name SmokeDetector
-            git config user.email "smokey@erwaysoftware.com"
-      - run:
-          name: Pytest
-          command: env/bin/python3 -W default::Warning -m pytest test
+          command: ./manage.py test
+          name: Test
+
+workflows:
+  main:
+    jobs:
+      - build-and-test
