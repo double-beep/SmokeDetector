@@ -324,7 +324,7 @@ class GitManager:
         ref = pr_info['head']['ref']
         string1 = regex.match(r".*?: \S+ (.*?)(?:\Z|\s*\(\?#)", string).group(1)
         string = string.replace("\\", "")
-        username = regex.match(r".*(?=:)", string)
+        username = regex.match(r".*(?=:)", string).group(0)
         if file == "blacklisted_websites.txt":
             blacklist_type = Blacklist.WEBSITES
             ms_search_option = "&body_is_regex=1&body="
